@@ -105,11 +105,11 @@
     </div>
     <script>
         window.addEventListener('pywebviewready', function () {
-            window.pywebview.api.read('cookies').then(data => {
+            window.pywebview.api.get('cookies').then(data => {
                 document.querySelector('.cookies').value = data
             })
 
-            window.pywebview.api.read('url').then(data => {
+            window.pywebview.api.get('url').then(data => {
                 document.querySelector('.url').value = data
             })
         })
@@ -123,17 +123,15 @@
             td1.textContent = num
             td2.textContent = id
             td3.textContent = txt
-            tr.id = `id_${id}`
+            tr.id = `id${id}`
             tr.appendChild(td1)
             tr.appendChild(td2)
             tr.appendChild(td3)
             tb.appendChild(tr)
         }
 
-        function update_txt(id, txt) {
-            console.log(id, txt);
-
-            var tb = document.querySelector(`#id_${id}`)
+        function update_item(id, txt) {
+            var tb = document.querySelector(`#id${id}`)
             tb.children[2].textContent = txt
         }
 
@@ -147,7 +145,7 @@
             if(url.length == 0 || cookies.length == 0){
                 return alert("请填写URL和Cookies")
             }
-            var item = document.querySelectorAll("tr")
+            var item = document.querySelectorAll("tbody tr")
             item.forEach(function(value){
                 value.remove()
             })
@@ -163,12 +161,12 @@
 
         var cookies = document.querySelector('.cookies')
         cookies.addEventListener('input', function () {
-            window.pywebview.api.save("cookies", cookies.value)
+            window.pywebview.api.set("cookies", cookies.value)
         })
 
         var url = document.querySelector('.url')
         url.addEventListener('input', function () {
-            window.pywebview.api.save("url", url.value)
+            window.pywebview.api.set("url", url.value)
         })
     </script>
 
