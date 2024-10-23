@@ -204,7 +204,9 @@ def window_onload(window):
     globals()["steam_api"] = steam("steamcmd")
 
 
-url = f"index.html"
+url = f"html/index.html"
 webview.settings["OPEN_DEVTOOLS_IN_DEBUG"] = False
 window = webview.create_window("Hello world", url, width=435, height=530, js_api=Api())
 webview.start(window_onload, window, debug=True)
+
+# pyinstaller -F -w --add-data html:html --contents-directory=. app.py
