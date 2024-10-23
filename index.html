@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-container {
+            flex: 4;
+            /* 表格占容器的2/3 */
+            overflow: auto;
+            /* 防止溢出 */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #f9f9f9;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 7px;
+            text-align: center;
+        }
+
+        th {
+            background-color: rgb(50 58 69 / 63%);
+            color: white;
+        }
+
+        .input-container {
+            flex: 1;
+            /* 输入框容器占容器的1/3 */
+            padding: 10px;
+        }
+
+        .input-box {
+            margin: 5px 0;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: inline;
+        }
+
+        .button {
+            display: inline;
+            padding: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            margin-left: 5px;
+        }
+
+        .button:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="table-container" style="border-bottom: 1px solid #ccc!important;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">索引</th>
+                        <th style="width: 65%;">名称</th>
+                        <th style="width: 20%;">状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="input-container">
+            <input type="text" class="input-box url" placeholder="Url" style="width: calc(100% - 62px);">
+            <div class="button" onclick="button_click()">下载</div>
+            <input type="text" class="input-box cookies" placeholder="Cookies" style="width: 100%;">
+        </div>
+    </div>
+    <script>
+        window.addEventListener('pywebviewready', function () {
+            window.pywebview.api.read('cookies').then(data => {
+                document.querySelector('.cookies').value = data
+            })
+
+            window.pywebview.api.read('url').then(data => {
+                document.querySelector('.url').value = data
+            })
+        })
+
+        function create_item(num, id, txt) {
+            var tb = document.querySelector('tbody')
+            var tr = document.createElement('tr')
+            var td1 = document.createElement('td')
+            var td2 = document.createElement('td')
+            var td3 = document.createElement('td')
+            td1.textContent = num
+            td2.textContent = id
+            td3.textContent = txt
+            tr.id = `id_${id}`
+            tr.appendChild(td1)
+            tr.appendChild(td2)
+            tr.appendChild(td3)
+            tb.appendChild(tr)
+        }
+
+        function update_txt(id, txt) {
+            console.log(id, txt);
+
+            var tb = document.querySelector(`#id_${id}`)
+            tb.children[2].textContent = txt
+        }
+
+        function button_click() {
+            var button = document.querySelector('.button')
+            var url = document.querySelector('.url').value
+            var cookies = document.querySelector('.cookies').value
+            if (button.disabled) {
+                return null
+            }
+            if(url.length == 0 || cookies.length == 0){
+                return alert("请填写URL和Cookies")
+            }
+            var item = document.querySelectorAll("tr")
+            item.forEach(function(value){
+                value.remove()
+            })
+
+            button.disabled = true
+
+            window.pywebview.api.update(url, cookies).then(
+                resp => {
+                    button.disabled = false
+                }
+            )
+        }
+
+        var cookies = document.querySelector('.cookies')
+        cookies.addEventListener('input', function () {
+            window.pywebview.api.save("cookies", cookies.value)
+        })
+
+        var url = document.querySelector('.url')
+        url.addEventListener('input', function () {
+            window.pywebview.api.save("url", url.value)
+        })
+    </script>
+
+</body>
+
+</html>
