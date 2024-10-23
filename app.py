@@ -6,6 +6,7 @@ import urllib.parse
 from urllib.parse import urlparse, parse_qs
 import json
 from winpty import PTY
+import hashlib
 
 
 class steamcmd:
@@ -15,6 +16,8 @@ class steamcmd:
         self.steam_cmd = os.path.abspath(self.steam_cmd)
         self.workshop_content = f"{root}/steamapps/workshop/content"
         self.workshop_content = os.path.abspath(self.workshop_content)
+        self.md5 = "2629c77b1149eee9203e045e289e68ef"
+        self.mutex = False
 
     def paste(self, text):
         pattern_map = {
@@ -67,6 +70,29 @@ class steamcmd:
         del process
         return queue
 
+    def update(self):
+        md5_hash = hashlib.md5()
+        with open(self.steam_cmd, "rb") as file:
+            for chunk in iter(lambda: file.read(4096), b""):
+                md5_hash.update(chunk)
+        full_md5 = md5_hash.hexdigest()
+        if full_md5 == self.md5:
+            self.mutex = True
+            window.title = "即将初始化..."
+            process = PTY(1000, 25)  # cols值不应过小,否则输出会被截断
+            process.spawn(self.steam_cmd + " " + "+quit")
+            while process.isalive():
+                line = process.read()
+                if len(line) != 0:
+                    window.title = f"初始化: {line}"
+                    print(line)
+            window.title = f"初始化结束..."
+            print("初始化结束...")
+            self.mutex = False
+            del process
+        else:
+            print("初始化完成...")
+
 
 def create_item(num, mid, text):
     window.evaluate_js(f"create_item(`{num}`,`{mid}`,`{text}`)")
@@ -74,6 +100,10 @@ def create_item(num, mid, text):
 
 def update_item(mid, text):
     window.evaluate_js(f"update_item(`{mid}`,`{text}`)")
+
+
+def message_box(text):
+    window.evaluate_js(f"alert(`{text}`)")
 
 
 def myworkshopfiles(url, appid, cookies, obs):
@@ -145,6 +175,9 @@ class Api:
             json.dump(self.config, file)
 
     def update(self, url, cookies):
+        if steam_api.mutex:  # 判断是否在初始化
+            message_box("正在初始化,请稍后再试...")
+            return None
         parsed_url = urlparse(url)
         scheme = parsed_url.scheme
         netloc = parsed_url.netloc
@@ -174,9 +207,15 @@ class Api:
                 update_item(args[0], "下载失败 {args[1]}")
                 text = f"下载失败 {args[0]} {args[1]}"
             window.title = f"[{num}/{total}] " + (text or "")
+            print(f"[{num}/{total}] " + (text or ""))
 
         mods = myworkshopfiles(curl + "?" + query, appid, cookies, obs)
-        return steam_api.workshop_download(appid, mods, obs)
+        mods_status = steam_api.workshop_download(appid, mods, obs)
+        return mods_status
+
+    def steamcmd(self):
+        steam_api.update()
+        ...
 
 
 webview.settings["OPEN_DEVTOOLS_IN_DEBUG"] = False
