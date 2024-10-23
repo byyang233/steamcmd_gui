@@ -1,11 +1,11 @@
-import subprocess, os, re
-import time
+import os, re
 import webview
 from bs4 import BeautifulSoup
 import requests
 import urllib.parse
 from urllib.parse import urlparse, parse_qs
 import json
+from winpty import PTY
 
 
 class steam:
@@ -28,17 +28,14 @@ class steam:
         comm = " ".join(comm)
         command = f"+login anonymous {comm} +quit"
         command = self.steam_cmd + " " + command
-        process = subprocess.Popen(
-            command,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+        cols, rows = 1000, 25 # cols值不应过小,否则输出会被截断
+        process = PTY(cols, rows)
+        process.spawn(command)
         stdout_temp = []
-        while process.poll() != 0:
-            output = process.stdout.readline()
+        while process.isalive():
+            output = process.read()
             if len(output) != 0:
+                print(output)
                 data = self.paste(output.strip())
                 stdout_temp.append(output)
                 if len(data) != 0:
@@ -52,8 +49,7 @@ class steam:
                         if item != None:
                             if obs != None:
                                 obs(2, item[2].format(*item), item, comp, len(mods_id))
-        process.stdout.close()
-        process.wait()
+        del process
         return mods_map
 
     def paste(self, text):
