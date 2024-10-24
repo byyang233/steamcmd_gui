@@ -40,10 +40,11 @@ jobs:
         run: |
           $VERSION = Get-Content version.txt
           Write-Output "Current version is $VERSION"
-          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "MY_ENV_VAR=$VERSION" >> $GITHUB_ENV
 
       - name: 输出版本号
         run: |
+          echo "The value of MY_ENV_VAR is $MY_ENV_VAR"
           Write-Output "The version is $version"
 
       - name: 增加版本号
