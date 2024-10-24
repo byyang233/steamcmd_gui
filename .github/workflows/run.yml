@@ -41,11 +41,21 @@ jobs:
                   cd dist
                   powershell -Command "Compress-Archive -Path * -DestinationPath ../steamcmd_gui.win.x86_64.zip -Force"
 
+            - name: 获取当前版本号
+              id: get_version
+              run: |
+                  # 从标签中获取当前版本号
+                  git fetch --tags
+                  current_version=$(git tag | sort -V | tail -n 1)
+                  # 提取数字部分并增加1
+                  new_version=$(echo $current_version | awk -F. -v OFS=. '{$NF++;print}')
+                  echo "new_version=$new_version" >> $GITHUB_ENV
+
             - name: 推送发行版
               id: create_release
               uses: softprops/action-gh-release@v1
               with:
-                  tag_name: v1.0.0
+                  tag_name: ${{ env.new_version }}
                   files: steamcmd_gui.win.x86_64.zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
