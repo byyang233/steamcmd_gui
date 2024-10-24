@@ -19,7 +19,7 @@ jobs:
             - name: 指定Python版本
               uses: actions/setup-python@v2
               with:
-                  python-version: "3.11"
+                  python-version: "3.12"
 
             - name: 安装Python环境
               run: |
@@ -39,13 +39,13 @@ jobs:
             - name: 打包发行版
               run: |
                   cd dist
-                  powershell -Command "Compress-Archive -Path * -DestinationPath ../build.zip -Force"
+                  powershell -Command "Compress-Archive -Path * -DestinationPath ../steamcmd_gui.win.x86_64.zip -Force"
 
             - name: 推送发行版
               id: create_release
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: v1.0.0
-                  files: build.zip
+                  files: steamcmd_gui.win.x86_64.zip
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
