@@ -41,7 +41,10 @@ jobs:
           $VERSION = Get-Content version.txt
           Write-Output "Current version is $VERSION"
           echo "version=$VERSION" >> $GITHUB_ENV
-          echo "The version is ${{ env.version }}"
+
+      - name: 输出版本号
+        run: |
+          Write-Output "The version is $env:version"
 
       - name: 增加版本号
         run: |
