@@ -53,10 +53,11 @@ jobs:
           Write-Output "New version is $NEW_VERSION"
           Set-Content version.txt $NEW_VERSION
           echo "new_version=$NEW_VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Write-Output "Current version is $${{ env.version }},${{ env.new_version }}"
+          Write-Output "Current version is ${{ env.new_version }}"
 
       - name: 推送版本号
         run: |
+          Write-Output "Current version is ${{ env.new_version }}"
           git config --local user.email "2567810193@qq.com"
           git config --local user.name "Mnaisuka"
           git add version.txt
