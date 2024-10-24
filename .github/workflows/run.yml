@@ -36,11 +36,6 @@ jobs:
         run: |
           mv steamcmd dist
 
-      - name: 打包发行版
-        run: |
-          cd dist
-          powershell -Command "Compress-Archive -Path * -DestinationPath ../windows.x86_64.zip -Force"
-
       - name: 读取版本号
         id: get_version
         run: |
@@ -68,11 +63,16 @@ jobs:
           git tag "v${{ steps.increment_version.outputs.new_version }}"
           git push origin main --tags
 
+      - name: 打包发行版
+        run: |
+          cd dist
+          powershell -Command "Compress-Archive -Path * -DestinationPath ../steamcmd_gui.ver${{ steps.increment_version.outputs.new_version }}.zip -Force"
+
       - name: 推送发行版
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "v${{ steps.increment_version.outputs.new_version }}"
-          files: windows.x86_64.zip
+          files: steamcmd_gui.ver${{ steps.increment_version.outputs.new_version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
