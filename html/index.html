@@ -112,6 +112,8 @@
             window.pywebview.api.get('url').then(data => {
                 document.querySelector('.url').value = data
             })
+
+            window.pywebview.api.steamcmd()
         })
 
         function create_item(num, id, txt) {
@@ -142,11 +144,11 @@
             if (button.disabled) {
                 return null
             }
-            if(url.length == 0 || cookies.length == 0){
+            if (url.length == 0 || cookies.length == 0) {
                 return alert("请填写URL和Cookies")
             }
             var item = document.querySelectorAll("tbody tr")
-            item.forEach(function(value){
+            item.forEach(function (value) {
                 value.remove()
             })
 
