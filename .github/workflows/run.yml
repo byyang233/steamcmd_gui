@@ -42,12 +42,15 @@ jobs:
           $VERSION = Get-Content version.txt
           Write-Output "Current version is $VERSION"
           echo "::set-output name=version::$VERSION"
-          echo "abc=$VERSION" >> "$GITHUB_ENV"
 
-      - name: 测试
-        id: getget
+      - name: Set the value
+        id: step_one
         run: |
-          printf '%s\n' "$abc" # This will output 'yellow'
+          echo "action_state=yellow" >> "$GITHUB_ENV"
+      - name: Use the value
+        id: step_two
+        run: |
+          printf '%s\n' "$action_state" # This will output 'yellow'
 
       - name: 增加版本号
         id: increment_version
