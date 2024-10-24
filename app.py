@@ -243,6 +243,9 @@ class Api:
                 return []
             mods_status = steam_api.workshop_download(appid, mods, obs)
             steam_api.exclude(appid, mods)
+            mod_dir = os.path.join(steam_api.workshop_content,appid)
+            if os.path.exists(mod_dir):
+                os.startfile(mod_dir) # 打开文件夹
             return mods_status  # 检索文件夹,判断是否有多余文件夹,如有则弹窗提示是否删除
         except Exception as e:
             logger.exception("未知错误")
