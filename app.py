@@ -242,11 +242,11 @@ class Api:
             if mods == False:
                 return []
             mods_status = steam_api.workshop_download(appid, mods, obs)
-            steam_api.exclude(appid, mods)
+            steam_api.exclude(appid, mods) # 检索非订阅列表里的目录
             mod_dir = os.path.join(steam_api.workshop_content,appid)
             if os.path.exists(mod_dir):
                 os.startfile(mod_dir) # 打开文件夹
-            return mods_status  # 检索文件夹,判断是否有多余文件夹,如有则弹窗提示是否删除
+            return mods_status
         except Exception as e:
             logger.exception("未知错误")
             showerror("未知错误:", str(e))
