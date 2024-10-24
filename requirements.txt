@@ -2,3 +2,4 @@ beautifulsoup4
 pywebview
 pywinpty
 requests
+loguru
