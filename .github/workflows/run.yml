@@ -37,45 +37,48 @@ jobs:
           mv steamcmd dist
 
       - name: 读取版本号
+        id: get_version
         run: |
           $VERSION = Get-Content version.txt
           Write-Output "Current version is $VERSION"
-          echo "MY_ENV_VAR=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=version::$VERSION"
+          echo "abc=$VERSION" >> "$GITHUB_ENV"
 
-      - name: 输出版本号
+      - name: 测试
+        id: getget
         run: |
-          echo "The value of MY_ENV_VAR is $MY_ENV_VAR"
-          Write-Output "The version is $version"
+          printf '%s\n' "$abc" # This will output 'yellow'
 
       - name: 增加版本号
+        id: increment_version
         run: |
-          $VERSION = "${{ env.version }}"
+          $VERSION = "${{ steps.get_version.outputs.version }}"
           $parts = $VERSION -split '\.'
           $patch = [int]$parts[2] + 1
           $NEW_VERSION = "$($parts[0]).$($parts[1]).$patch"
           Write-Output "New version is $NEW_VERSION"
           Set-Content version.txt $NEW_VERSION
-          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+          echo "::set-output name=new_version::$NEW_VERSION"
 
       - name: 推送版本号
         run: |
           git config --local user.email "2567810193@qq.com"
           git config --local user.name "Mnaisuka"
           git add version.txt
-          git commit -m "Bump version to ${{ env.new_version }}"
-          git tag "v${{ env.new_version }}"
+          git commit -m "Bump version to ${{ steps.increment_version.outputs.new_version }}"
+          git tag "v${{ steps.increment_version.outputs.new_version }}"
           git push origin main --tags
 
       - name: 打包发行版
         run: |
           cd dist
-          powershell -Command "Compress-Archive -Path * -DestinationPath ../steamcmd_gui.ver${{ env.new_version }}.zip -Force"
+          powershell -Command "Compress-Archive -Path * -DestinationPath ../steamcmd_gui.ver${{ steps.increment_version.outputs.new_version }}.zip -Force"
 
       - name: 推送发行版
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "v${{ env.new_version }}"
-          files: steamcmd_gui.ver${{ env.new_version }}.zip
+          tag_name: "v${{ steps.increment_version.outputs.new_version }}"
+          files: steamcmd_gui.ver${{ steps.increment_version.outputs.new_version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
