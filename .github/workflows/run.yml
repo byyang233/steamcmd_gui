@@ -44,7 +44,7 @@ jobs:
 
       - name: 输出版本号
         run: |
-          Write-Output "The version is $env:version"
+          Write-Output "The version is $version"
 
       - name: 增加版本号
         run: |
