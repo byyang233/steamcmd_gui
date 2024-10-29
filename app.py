@@ -128,7 +128,7 @@ def message_box(text):
     window.evaluate_js(f"alert(`{text}`)")
 
 
-def myworkshopfiles(url, appid, cookies, obs):
+def myworkshopfiles(url, appid, cookies, obs, verify=True):
     def get_url_params(url):
         params = {}
         if "?" in url:
@@ -151,7 +151,7 @@ def myworkshopfiles(url, appid, cookies, obs):
     try:
         obs(-5, "正在检索模组...", [], 0, 0)
         query_string = urllib.parse.urlencode(params)
-        response = requests.get(f"{url}?{query_string}", headers=headers)
+        response = requests.get(f"{url}?{query_string}", headers=headers, verify=verify)
         soup = BeautifulSoup(response.text, "html.parser")
         pages = soup.find_all(class_="pagelink")
         if len(pages) == 0:
@@ -165,7 +165,7 @@ def myworkshopfiles(url, appid, cookies, obs):
         for index in range(int(pages)):
             params["p"] = index + 1
             curl = f"{url}?{urllib.parse.urlencode(params)}"
-            page_data = requests.get(curl, headers=headers)
+            page_data = requests.get(curl, headers=headers, verify=verify)
             page_soup = BeautifulSoup(page_data.text, "html.parser")
             parent = page_soup.select(".workshopItemPreviewHolder")
             for item in parent:
@@ -174,6 +174,9 @@ def myworkshopfiles(url, appid, cookies, obs):
             obs(-5, f"正在读取第{index + 1}/{pages}页...", [], 0, 0)
         obs(-5, f"已检索模组数量:{len(mods)}", [], 0, 0)
         return mods
+    except requests.exceptions.SSLError as e:
+        logger.exception("SSL错误:正在禁用并重试...")
+        return myworkshopfiles(url, appid, cookies, obs, False)
     except Exception as e:
         logger.exception("未知错误")
         window.title = f"检索失败: {str(e)}"
@@ -242,10 +245,10 @@ class Api:
             if mods == False:
                 return []
             mods_status = steam_api.workshop_download(appid, mods, obs)
-            steam_api.exclude(appid, mods) # 检索非订阅列表里的目录
-            mod_dir = os.path.join(steam_api.workshop_content,appid)
+            steam_api.exclude(appid, mods)  # 检索非订阅列表里的目录
+            mod_dir = os.path.join(steam_api.workshop_content, appid)
             if os.path.exists(mod_dir):
-                os.startfile(mod_dir) # 打开文件夹
+                os.startfile(mod_dir)  # 打开文件夹
             return mods_status
         except Exception as e:
             logger.exception("未知错误")
