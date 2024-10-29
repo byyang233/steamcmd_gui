@@ -236,7 +236,7 @@ class Api:
                     update_item(args[0], "下载完成")
                     text = f"下载完成 {args[0]}"
                 if code == -1:  # 下载失败
-                    update_item(args[0], "下载失败 {args[1]}")
+                    update_item(args[0], f"下载失败 {args[1]}")
                     text = f"下载失败 {args[0]} {args[1]}"
                 window.title = f"[{num}/{total}] " + (text or "")
                 logger.debug(window.title)
