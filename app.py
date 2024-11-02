@@ -106,14 +106,15 @@ class steamcmd:
             if os.path.isdir(full_path):
                 if not (dir in mods_id):
                     excludes.append(dir)
-        result = messagebox.askyesno(
-            "移除未订阅文件?", json.dumps(excludes, ensure_ascii=False)
-        )
-        if result:
-            for dir in excludes:
-                mod_dir = os.path.join(mods_path, dir)
-                os.rmdir(mod_dir)
-                logger.debug(f"移除: {mod_dir}")
+        if len(excludes) > 0:
+            result = messagebox.askyesno(
+                "移除未订阅文件?", json.dumps(excludes, ensure_ascii=False)
+            )
+            if result:
+                for dir in excludes:
+                    mod_dir = os.path.join(mods_path, dir)
+                    os.rmdir(mod_dir)
+                    logger.debug(f"移除: {mod_dir}")
 
 
 def create_item(num, mid, text):
