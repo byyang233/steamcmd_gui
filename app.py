@@ -1,13 +1,17 @@
 import os
 import re
-import hashlib
-import requests
-from winpty import PTY
-from tkinter import messagebox
-import json
-import urllib.parse
+import webview
 from bs4 import BeautifulSoup
-from tkinter.messagebox import showerror
+import requests
+import urllib.parse
+from urllib.parse import urlparse
+import json
+from winpty import PTY
+import hashlib
+from loguru import logger
+from tkinter.messagebox import *
+from tkinter import messagebox
+
 
 class steamcmd:
     def __init__(self, root):
@@ -21,9 +25,9 @@ class steamcmd:
 
     def paste(self, text):
         pattern_map = {
-            "Downloading item (\d+) ...": 1,
-            'Success. Downloaded item (\d+) to "(.*?)"': 2,
-            "ERROR! Download item (\d+) failed \((.*)\).": -1,
+            r"Downloading item (\d+) ...": 1,
+            r'Success. Downloaded item (\d+) to "(.*?)"': 2,
+            r"ERROR! Download item (\d+) failed \((.*)\).": -1,
         }
         for pattern in pattern_map:
             matches = re.findall(pattern, text, re.IGNORECASE)
@@ -38,15 +42,9 @@ class steamcmd:
         command = []
         compnum = 0
         command.append(self.steam_cmd)
-        
-        # 从文件读取账号信息
-        user, p = self.get_steam_account(app_id)
-        if not user or not p:
-            messagebox.showerror("错误", "没有找到适合的Steam账号")
-            return None
-        
+        user = open('user.txt', 'r').read()
+        p = open('p.txt', 'r').read()
         command.append(f"+login {user} {p}")
-        
         if type(mods_id) == str:  # 字符串转数组
             mods_id = [mods_id]
         for _, mod_id in enumerate(mods_id):
@@ -55,8 +53,7 @@ class steamcmd:
             command.append("+workshop_download_item {0} {1}".format(app_id, mod_id))
         command.append("+quit")
         command = " ".join(command)
-
-        # 执行steamcmd下载
+        # --------------------------
         process = PTY(1000, 25)  # cols值不应过小,否则输出会被截断
         process.spawn(command)
         while process.isalive():
@@ -64,7 +61,7 @@ class steamcmd:
             if len(line) != 0:
                 obs(-5, line, [], compnum, len(mods_id))  # 文本
                 pack = self.paste(line.strip())
-                if pack != None:
+                if pack is not None:
                     mod_id = pack[1][0][0]
                     if pack[0] == 1:  # 正在下载
                         queue[mod_id] = [1, None]
@@ -79,21 +76,6 @@ class steamcmd:
         del process
         return queue
 
-    def get_steam_account(self, app_id):
-        """从配置文件获取拥有指定AppID的Steam账号"""
-        try:
-            with open('accounts.txt', 'r') as file:
-                accounts = file.readlines()
-            for account in accounts:
-                username, password, appids = account.strip().split(":")
-                appids = appids.split(",")
-                if str(app_id) in appids:  # 如果此账号拥有指定的AppID
-                    return username, password
-            return None, None
-        except Exception as e:
-            messagebox.showerror("错误", f"读取账号信息失败: {e}")
-            return None, None
-
     def update(self):
         md5_hash = hashlib.md5()
         with open(self.steam_cmd, "rb") as file:
@@ -103,13 +85,16 @@ class steamcmd:
         if full_md5 == self.md5:
             self.mutex = True
             window.title = "即将初始化..."
-            process = PTY(1000, 25)
+            logger.debug(window.title)
+            process = PTY(1000, 25)  # cols值不应过小,否则输出会被截断
             process.spawn(self.steam_cmd + " " + "+quit")
             while process.isalive():
                 line = process.read()
                 if len(line) != 0:
                     window.title = f"初始化: {line}"
+                    logger.debug(window.title)
             window.title = f"初始化结束..."
+            logger.debug(window.title)
             self.mutex = False
             del process
         else:
@@ -133,6 +118,18 @@ class steamcmd:
                     mod_dir = os.path.join(mods_path, dir)
                     os.rmdir(mod_dir)
                     logger.debug(f"移除: {mod_dir}")
+
+
+def create_item(num, mid, text):
+    window.evaluate_js(f"create_item(`{num}`,`{mid}`,`{text}`)")
+
+
+def update_item(mid, text):
+    window.evaluate_js(f"update_item(`{mid}`,`{text}`)")
+
+
+def message_box(text):
+    window.evaluate_js(f"alert(`{text}`)")
 
 
 def myworkshopfiles(url, appid, cookies, obs, verify=True):
@@ -174,27 +171,4 @@ def myworkshopfiles(url, appid, cookies, obs, verify=True):
             curl = f"{url}?{urllib.parse.urlencode(params)}"
             page_data = requests.get(curl, headers=headers, verify=verify)
             page_soup = BeautifulSoup(page_data.text, "html.parser")
-            parent = page_soup.select(".workshopItemPreviewHolder")
-            for item in parent:
-                link = item.parent.get("href")
-                mods.append(get_url_params(link)["id"])
-            obs(-5, f"正在读取第{index + 1}/{pages}页...", [], 0, 0)
-        obs(-5, f"已检索模组数量:{len(mods)}", [], 0, 0)
-        return mods
-    except requests.exceptions.SSLError as e:
-        logger.exception("SSL错误:正在禁用并重试...")
-        return myworkshopfiles(url, appid, cookies, obs, False)
-    except Exception as e:
-        logger.exception("未知错误")
-        window.title = f"检索失败: {str(e)}"
-        showerror("检索失败:", str(e))
-        return False
-
-
-class Api:
-    def __init__(self):
-        self.config = self.read()
-
-    def read(self):
-        if os.path.exists("config.ui"):
-           
+            parent = page_soup.select(".workshopItemPreviewHol
